@@ -8,13 +8,17 @@
 #include <unistd.h>
 #include "./jobs.h"
 
-int input_redirection = 0;   // flag for input redirection symbol
-int output_redirection = 0;  // flag for output redirection symbol
-int append = 0;  // flag for output redirection symbol in append mode
-char *path;      // full path
+// flag for input redirection symbol
+int input_redirection = 0;
+// flag for output redirection symbol
+int output_redirection = 0;
+// flag for output redirection symbol in append mode
+int append = 0;
+char *path;
 char *outputfile = NULL;
 char *inputfile = NULL;
-int background;  // flag for ampersand
+// flag for ampersand
+int background;
 job_list_t *joblist;
 int jid;
 int jd_bg;
@@ -38,8 +42,10 @@ pid_t pid_child;
  * @param argv     An array of character pointers (strings) where the parsed
  * arguments will be stored.
  */
-void parse(char buffer[1024], char *tokens[512], char *argv[512]) {
-    if (buffer == NULL) return;
+void parse(char buffer[1024], char *tokens[512], char *argv[512])
+{
+    if (buffer == NULL)
+        return;
     // reset the global variables for multiple lines
     path = NULL;
     inputfile = NULL;
@@ -48,13 +54,16 @@ void parse(char buffer[1024], char *tokens[512], char *argv[512]) {
     output_redirection = 0;
     append = 0;
 
-    int fullpath = 0;  // flag for full path found
+    // flag for full path found
+    int fullpath = 0;
     char *str = buffer;
     char *token;
     int i = 0, j = 0, k = 0;
     // tokenize the input
-    while ((token = strtok(str, " \t\n")) != NULL) {
-        if (strncmp(token, "/", 1) == 0 && fullpath == 0) {
+    while ((token = strtok(str, " \t\n")) != NULL)
+    {
+        if (strncmp(token, "/", 1) == 0 && fullpath == 0)
+        {
             path = token;
             fullpath = 1;
         }
@@ -64,21 +73,24 @@ void parse(char buffer[1024], char *tokens[512], char *argv[512]) {
     }
 
     // checking ampersand
-    if (i > 0) {
+    if (i > 0)
+    {
         size_t len = strlen(tokens[i - 1]);
-        if (len == 1 && strcmp(tokens[i - 1], "&") == 0) {
+        if (len == 1 && strcmp(tokens[i - 1], "&") == 0)
+        {
             background = 1;
             tokens[i - 1] = '\0';
         }
     }
 
-    for (j = 0, k = 0; tokens[j] != NULL; j++) {
-        // input Redirection
-        if (strcmp(tokens[j], "<") == 0) {
+    for (j = 0, k = 0; tokens[j] != NULL; j++)
+    {
+        // Input redirection
+        if (strcmp(tokens[j], "<") == 0)
+        {
             input_redirection = 1;
             // Move to next index
             j++;
-            // Error checking
             if (tokens[j] == NULL)
                 fprintf(stderr, "syntax error: no input file\n");
             else if (strcmp(tokens[j], ">") == 0 ||
@@ -90,12 +102,15 @@ void parse(char buffer[1024], char *tokens[512], char *argv[512]) {
                 fprintf(stderr, "syntax error: multiple input files");
             else
                 inputfile = tokens[j];
-            // Output Redirection
-        } else if (strcmp(tokens[j], ">") == 0 ||
-                   strcmp(tokens[j], ">>") == 0) {
+        }
+        // Output Redirection
+        else if (strcmp(tokens[j], ">") == 0 ||
+                 strcmp(tokens[j], ">>") == 0)
+        {
             output_redirection = 1;
-            // Append Mode
-            if (strcmp(tokens[j], ">>") == 0) append = 1;
+            // Append mode
+            if (strcmp(tokens[j], ">>") == 0)
+                append = 1;
             j++;
             if (tokens[j] == NULL)
                 fprintf(stderr, "syntax error: no output file\n");
@@ -107,14 +122,20 @@ void parse(char buffer[1024], char *tokens[512], char *argv[512]) {
                 fprintf(stderr, "syntax error: multiple output files");
             else
                 outputfile = tokens[j];
-        } else {
-            if (tokens[j] && path && strcmp(tokens[j], path) == 0) {
+        }
+        else
+        {
+            if (tokens[j] && path && strcmp(tokens[j], path) == 0)
+            {
                 char *slash = strrchr(tokens[j], '/');
-                if (slash != NULL) {
+                if (slash != NULL)
+                {
                     slash++;
                     argv[k] = slash;
                 }
-            } else {
+            }
+            else
+            {
                 argv[k] = tokens[j];
             }
             k++;
@@ -138,7 +159,8 @@ void parse(char buffer[1024], char *tokens[512], char *argv[512]) {
  * be printed.
  *
  */
-void error_handler_system(const char *msg) {
+void error_handler_system(const char *msg)
+{
     perror(msg);
     exit(1);
 }
@@ -153,21 +175,29 @@ void error_handler_system(const char *msg) {
  * command.
  *
  */
-void process_redirection() {
+void process_redirection()
+{
     // Input Redirection
-    if (input_redirection) {
-        if (close(0) == -1) error_handler_system("close failed");
+    if (input_redirection)
+    {
+        if (close(0) == -1)
+            error_handler_system("close failed");
         if (open(inputfile, O_RDONLY, 0600) == -1)
             error_handler_system("open failed");
     }
     // Output Redirection
-    if (output_redirection) {
-        if (close(1) == -1) error_handler_system("close failed");
+    if (output_redirection)
+    {
+        if (close(1) == -1)
+            error_handler_system("close failed");
         // Append Mode
-        if (append) {
+        if (append)
+        {
             if (open(outputfile, O_WRONLY | O_APPEND | O_CREAT, 0600) == -1)
                 error_handler_system("open failed");
-        } else {
+        }
+        else
+        {
             if (open(outputfile, O_WRONLY | O_CREAT | O_TRUNC, 0600) == -1)
                 error_handler_system("open failed");
         }
@@ -190,52 +220,74 @@ void process_redirection() {
  *
  */
 
-void reaping(char *tokens[512]) {
+void reaping(char *tokens[512])
+{
     int status_waitpid;
     pid_t ppid;
     while ((ppid = waitpid(-1, &status_waitpid,
-                           WNOHANG | WUNTRACED | WCONTINUED)) > 0) {
-        if (WIFSTOPPED(status_waitpid)) {
+                           WNOHANG | WUNTRACED | WCONTINUED)) > 0)
+    {
+        if (WIFSTOPPED(status_waitpid))
+        {
             // bg job stopped by a signal
-            if (get_job_jid(joblist, ppid) == -1) {
-                if (add_job(joblist, jid, ppid, STOPPED, tokens[0]) == 0) jid++;
-            } else {
+            if (get_job_jid(joblist, ppid) == -1)
+            {
+                if (add_job(joblist, jid, ppid, STOPPED, tokens[0]) == 0)
+                    jid++;
+            }
+            else
+            {
                 update_job_pid(joblist, ppid, STOPPED);
             }
             fprintf(stderr, "[%d] (%d) suspended by signal %d\n",
                     get_job_jid(joblist, ppid), ppid, WSTOPSIG(status_waitpid));
-        } else if (WIFSIGNALED(status_waitpid)) {
+        }
+        else if (WIFSIGNALED(status_waitpid))
+        {
             // bg job terminated by signal
             int jobid = get_job_jid(joblist, ppid);
-            if (jobid == -1) {
+            if (jobid == -1)
+            {
                 fprintf(stderr, "[%d] (%d) terminated by signal %d\n", jd_bg++,
                         ppid, WTERMSIG(status_waitpid));
                 remove_job_pid(joblist, ppid);
-            } else {
+            }
+            else
+            {
                 fprintf(stderr, "[%d] (%d) terminated by signal %d\n", jobid,
                         ppid, WTERMSIG(status_waitpid));
                 remove_job_pid(joblist, ppid);
             }
-
-        } else if (WIFCONTINUED(status_waitpid)) {
-            // a bg job is resumed
+        }
+        else if (WIFCONTINUED(status_waitpid))
+        {
+            // bg job is resumed
             int jd = get_job_jid(joblist, ppid);
-            if (jd == -1) {
-                if (add_job(joblist, jid, ppid, RUNNING, tokens[0]) == 0) {
+            if (jd == -1)
+            {
+                if (add_job(joblist, jid, ppid, RUNNING, tokens[0]) == 0)
+                {
                     fprintf(stderr, "[%d] (%d) resumed\n", jid, ppid);
                     jid++;
                 }
-            } else if (jd) {
+            }
+            else if (jd)
+            {
                 update_job_pid(joblist, ppid, RUNNING);
                 fprintf(stderr, "[%d] (%d) resumed\n", jd, ppid);
             }
-        } else if (WIFEXITED(status_waitpid)) {
+        }
+        else if (WIFEXITED(status_waitpid))
+        {
             // bg job exits normally
             int jobid = get_job_jid(joblist, ppid);
-            if (jobid == -1) {
+            if (jobid == -1)
+            {
                 fprintf(stderr, "[%d] (%d) terminated with exit status %d\n",
                         jd_bg++, ppid, WEXITSTATUS(status_waitpid));
-            } else {
+            }
+            else
+            {
                 fprintf(stderr, "[%d] (%d) terminated with exit status %d\n",
                         jobid, ppid, WEXITSTATUS(status_waitpid));
             }
@@ -259,13 +311,19 @@ void reaping(char *tokens[512]) {
  * background job is being passed when calling add_job function.
  *
  */
-void addBgJob(char *tokens[512]) {
-    if (background) {
-        if (tokens[0]) {
+void addBgJob(char *tokens[512])
+{
+    if (background)
+    {
+        if (tokens[0])
+        {
             int result = add_job(joblist, jid, pid_child, RUNNING, tokens[0]);
-            if (result == -1) {
+            if (result == -1)
+            {
                 fprintf(stderr, "add job error\n");
-            } else if (result == 0) {
+            }
+            else if (result == 0)
+            {
                 fprintf(stderr, "[%d] (%d)\n", jid, pid_child);
                 jid++;
             }
@@ -287,36 +345,51 @@ void addBgJob(char *tokens[512]) {
  * tokens. The token at index 0 containing the orignal command that started the
  * background job is being passed when calling add_job function.
  */
-void waitFgProcess(char *tokens[512]) {
+void waitFgProcess(char *tokens[512])
+{
     int status;
     pid_t cur_pid = waitpid(pid_child, &status, WUNTRACED);
     if (cur_pid < 0)
         error_handler_system("wait");
-    else if (cur_pid > 0) {
-        if (WIFSTOPPED(status)) {
+    else if (cur_pid > 0)
+    {
+        if (WIFSTOPPED(status))
+        {
             int jobid = get_job_jid(joblist, cur_pid);
-            if ((jobid == -1)) {
-                if (add_job(joblist, jid, cur_pid, STOPPED, tokens[0]) == 0) {
+            if ((jobid == -1))
+            {
+                if (add_job(joblist, jid, cur_pid, STOPPED, tokens[0]) == 0)
+                {
                     jobid = jid;
                     jid++;
                 }
-            } else {
+            }
+            else
+            {
                 update_job_jid(joblist, cur_pid, STOPPED);
             }
             fprintf(stderr, "[%d] (%d) suspended by signal %d\n", jobid,
                     cur_pid, WSTOPSIG(status));
-        } else if (WIFSIGNALED(status)) {
+        }
+        else if (WIFSIGNALED(status))
+        {
             remove_job_pid(joblist, cur_pid);
             fprintf(stderr, "(%d) terminated by signal %d\n", cur_pid,
                     WTERMSIG(status));
-        } else if (WIFCONTINUED(status)) {
+        }
+        else if (WIFCONTINUED(status))
+        {
             int jd = get_job_jid(joblist, cur_pid);
-            if (jd == -1) {
-                if (add_job(joblist, jid, cur_pid, RUNNING, tokens[0]) == 0) {
+            if (jd == -1)
+            {
+                if (add_job(joblist, jid, cur_pid, RUNNING, tokens[0]) == 0)
+                {
                     fprintf(stderr, "[%d] (%d) resumed\n", jid, cur_pid);
                     jid++;
                 }
-            } else {
+            }
+            else
+            {
                 update_job_pid(joblist, cur_pid, RUNNING);
                 fprintf(stderr, "[%d] (%d) resumed\n", jd, cur_pid);
             }
@@ -326,8 +399,8 @@ void waitFgProcess(char *tokens[512]) {
     tcsetpgrp(0, getpgrp());
 }
 
-int main() {
-    /* TODO: everything! */
+int main()
+{
     // Ignore Signals
     signal(SIGINT, SIG_IGN);
     signal(SIGTSTP, SIG_IGN);
@@ -347,13 +420,16 @@ int main() {
     jid = 1;
     jd_bg = 1;
 
-    while (1) {
+    while (1)
+    {
 #ifdef PROMPT
-        if (printf("33sh> ") < 0) {
+        if (printf("33sh> ") < 0)
+        {
             /* handle error */
             fprintf(stderr, "33 shell error");
         }
-        if (fflush(stdout) < 0) {
+        if (fflush(stdout) < 0)
+        {
             /* handle error */
             error_handler_system("fflush failed");
         }
@@ -362,53 +438,77 @@ int main() {
         reaping(tokens);
 
         n = read(0, buf, sizeof(buf));
-        if (n == 1 && buf[0] == '\n') {
+        if (n == 1 && buf[0] == '\n')
+        {
             continue;
-        } else if (n == 0) {
+        }
+        else if (n == 0)
+        {
             cleanup_job_list(joblist);
             exit(0);
-        } else if (n < 0) {
+        }
+        else if (n < 0)
+        {
             error_handler_system("read failed");
         }
         buf[n] = 0;
-        for (int i = 0; i < 512; i++) {
+        for (int i = 0; i < 512; i++)
+        {
             tokens[i] = NULL;
             argv[i] = NULL;
         }
         inputfile = NULL;
         outputfile = NULL;
 
-        // Parse
         parse(buf, tokens, argv);
 
         // Handle Built-in Commands
-        if (tokens[0] == NULL) continue;
-        if (strcmp(tokens[0], "cd") == 0) {
+        if (tokens[0] == NULL)
+            continue;
+        if (strcmp(tokens[0], "cd") == 0)
+        {
             if (tokens[2] != NULL || tokens[1] == NULL)
                 fprintf(stderr, "syntax error\n");
-            else {
-                if (chdir(tokens[1]) == -1) error_handler_system("cd");
+            else
+            {
+                if (chdir(tokens[1]) == -1)
+                    error_handler_system("cd");
             }
-        } else if (strcmp(tokens[0], "ln") == 0) {
-            if (tokens[1] != NULL && tokens[2] != NULL) {
+        }
+        else if (strcmp(tokens[0], "ln") == 0)
+        {
+            if (tokens[1] != NULL && tokens[2] != NULL)
+            {
                 if (link(tokens[1], tokens[2]) == -1)
                     error_handler_system("link");
             }
-        } else if (strcmp(tokens[0], "rm") == 0) {
-            if (tokens[1] != NULL) {
-                if (unlink(tokens[1]) == -1) error_handler_system("unlink");
-            } else
+        }
+        else if (strcmp(tokens[0], "rm") == 0)
+        {
+            if (tokens[1] != NULL)
+            {
+                if (unlink(tokens[1]) == -1)
+                    error_handler_system("unlink");
+            }
+            else
                 fprintf(stderr, "missing operand\n");
-        } else if (strcmp(tokens[0], "exit") == 0) {
+        }
+        else if (strcmp(tokens[0], "exit") == 0)
+        {
             cleanup_job_list(joblist);
             exit(0);
-        } else if (strcmp(tokens[0], "jobs") == 0) {
+        }
+        else if (strcmp(tokens[0], "jobs") == 0)
+        {
             jobs(joblist);
-        } else if (strcmp(tokens[0], "fg") == 0) {
+        }
+        else if (strcmp(tokens[0], "fg") == 0)
+        {
             // parse jid
             int fg_jid = atoi(tokens[1] + 1);
             int fg_pid = get_job_pid(joblist, fg_jid);
-            if (get_job_pid(joblist, fg_jid) == -1) {
+            if (get_job_pid(joblist, fg_jid) == -1)
+            {
                 fprintf(stderr, "job not found\n");
             }
             // send SIGCONT to the process group
@@ -418,14 +518,20 @@ int main() {
 
             int status_fg;
             pid_t retval;
-            if ((retval = waitpid(fg_pid, &status_fg, WUNTRACED)) > 0) {
-                if (WIFSTOPPED(status_fg)) {
+            if ((retval = waitpid(fg_pid, &status_fg, WUNTRACED)) > 0)
+            {
+                if (WIFSTOPPED(status_fg))
+                {
                     update_job_pid(joblist, fg_pid, STOPPED);
                     fprintf(stderr, "[%d] (%d) suspended by signal %d\n",
                             fg_jid, fg_pid, WSTOPSIG(status_fg));
-                } else if (WIFEXITED(status_fg)) {
+                }
+                else if (WIFEXITED(status_fg))
+                {
                     remove_job_pid(joblist, fg_pid);
-                } else if (WIFSIGNALED(status_fg)) {
+                }
+                else if (WIFSIGNALED(status_fg))
+                {
                     fprintf(stderr, "(%d) terminated by signal %d\n", fg_pid,
                             WTERMSIG(status_fg));
                     remove_job_pid(joblist, fg_pid);
@@ -433,40 +539,54 @@ int main() {
             }
             // transfer control back to shell
             tcsetpgrp(0, getpgrp());
-        } else if (strcmp(tokens[0], "bg") == 0) {
+        }
+        else if (strcmp(tokens[0], "bg") == 0)
+        {
             int bg_jid = atoi(tokens[1] + 1);
             int bg_pid = get_job_pid(joblist, bg_jid);
-            if (bg_pid == -1) {
+            if (bg_pid == -1)
+            {
                 fprintf(stderr, "job not found\n");
             }
             kill(-bg_pid, SIGCONT);
             update_job_pid(joblist, bg_pid, RUNNING);
-        } else {
+        }
+        else
+        {
             // Fork child process
-            if ((pid_child = fork()) == 0) {
+            if ((pid_child = fork()) == 0)
+            {
                 setpgid(0, 0);
-                if (!background) {
+                if (!background)
+                {
                     tcsetpgrp(0, getpgrp());
                 }
                 signal(SIGINT, SIG_DFL);
                 signal(SIGTSTP, SIG_DFL);
                 signal(SIGTTOU, SIG_DFL);
                 char *p = NULL;
-                if (input_redirection || output_redirection) {
+                if (input_redirection || output_redirection)
+                {
                     process_redirection();
                     p = path;
-                } else
+                }
+                else
                     p = tokens[0];
                 execv(p, argv);
                 error_handler_system("execv");
-            } else if (pid_child == -1) {
+            }
+            else if (pid_child == -1)
+            {
                 error_handler_system("fork");
-            } else {
-                // Add background jobs
+            }
+            else
+            {
+                // Add bg jobs
                 addBgJob(tokens);
 
-                // Wait For Foreground Process
-                if (!background) waitFgProcess(tokens);
+                // Wait for fg process
+                if (!background)
+                    waitFgProcess(tokens);
             }
         }
     }
