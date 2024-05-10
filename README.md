@@ -8,7 +8,7 @@
 
 # Shell 2
 
-The primary source code is located in sh.c. Shell 2 is a terminal-based shell that mimics the functionality of the Bash shell. It supports a variety of features including safe signal handling, input/output redirection, and the ability to manage jobs in both the foreground and background. The shell also includes implementations of numerous Bash builtins. Shell 2 can be used just like a regular Bash shell.
+The primary source code is located in sh.c. Shell 2 is a terminal-based shell that mimics the functionality of the Bash shell. It supports a variety of features including safe signal handling, input/output redirection, and the ability to manage jobs in both the foreground and background. The shell also includes implementations of numerous Bash builtins.
 
 ## Program Structure
 
